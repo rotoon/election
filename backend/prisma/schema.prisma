@@ -1,0 +1,84 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum Role {
+    admin
+    ec
+    voter
+}
+
+model Profile {
+    id             String        @id @default(uuid())
+    email          String        @unique
+    password       String
+    nationalId     String        @unique @map("national_id")
+    fullName       String        @map("full_name")
+    address        String
+    role           Role          @default(voter)
+    constituencyId Int?          @map("constituency_id")
+    constituency   Constituency? @relation(fields: [constituencyId], references: [id])
+    createdAt      DateTime      @default(now()) @map("created_at")
+    votes          Vote[]
+
+    @@map("profiles")
+}
+
+model Constituency {
+    id         Int         @id @default(autoincrement())
+    province   String
+    zoneNumber Int         @map("zone_number")
+    isPollOpen Boolean     @default(false) @map("is_poll_open")
+    profiles   Profile[]
+    candidates Candidate[]
+    votes      Vote[]
+
+    @@unique([province, zoneNumber])
+    @@map("constituencies")
+}
+
+model Party {
+    id         Int         @id @default(autoincrement())
+    name       String      @unique
+    logoUrl    String      @default("") @map("logo_url")
+    policy     String      @default("")
+    color      String      @default("#3B82F6")
+    candidates Candidate[]
+
+    @@map("parties")
+}
+
+model Candidate {
+    id              Int          @id @default(autoincrement())
+    firstName       String       @map("first_name")
+    lastName        String       @map("last_name")
+    candidateNumber Int          @map("candidate_number")
+    imageUrl        String       @default("") @map("image_url")
+    personalPolicy  String       @default("") @map("personal_policy")
+    partyId         Int          @map("party_id")
+    party           Party        @relation(fields: [partyId], references: [id], onDelete: Cascade)
+    constituencyId  Int          @map("constituency_id")
+    constituency    Constituency @relation(fields: [constituencyId], references: [id], onDelete: Cascade)
+    votes           Vote[]
+
+    @@unique([constituencyId, candidateNumber])
+    @@map("candidates")
+}
+
+model Vote {
+    id             String       @id @default(uuid())
+    userId         String       @map("user_id")
+    user           Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    candidateId    Int          @map("candidate_id")
+    candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    constituencyId Int          @map("constituency_id")
+    constituency   Constituency @relation(fields: [constituencyId], references: [id], onDelete: Cascade)
+    timestamp      DateTime     @default(now())
+
+    @@unique([userId, constituencyId])
+    @@map("votes")
+}
