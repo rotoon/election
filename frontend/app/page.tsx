@@ -205,8 +205,8 @@ export default function Home() {
 
         {/* Main Content Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Parliament & Leaderboard (8 cols) */}
-          <div className="lg:col-span-8 space-y-8">
+          {/* Left Column: Parliament & Leaderboard (6 cols) */}
+          <div className="lg:col-span-6 space-y-8">
             {/* Visual: Parliament Chart */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
               <div className="flex items-center justify-between mb-6">
@@ -247,8 +247,8 @@ export default function Home() {
             />
           </div>
 
-          {/* Right Column: Live Map (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Right Column: Live Map (6cols) */}
+          <div className="lg:col-span-6 space-y-6">
             <ThailandMap />
           </div>
         </section>

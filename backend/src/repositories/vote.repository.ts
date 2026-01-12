@@ -58,6 +58,14 @@ export class VoteRepository {
   async getTotalVotes() {
     return prisma.vote.count();
   }
+
+  // Batch fetch all vote counts grouped by candidate (for dashboard optimization)
+  async getAllVoteCounts() {
+    return prisma.vote.groupBy({
+      by: ["candidateId"],
+      _count: { candidateId: true },
+    });
+  }
 }
 
 export const voteRepository = new VoteRepository();

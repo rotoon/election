@@ -700,11 +700,11 @@ export function useDashboardStats() {
         turnout: data.data.turnout || data.data.voteTurnout, // Fallback safely
       };
     },
-    refetchInterval: 30000, // Refresh every 30s
+    // refetchInterval: 30000, // Refresh every 30s
+    staleTime: 10000, // Cache data for 10 seconds
   });
 }
 
-// 16. Hook to fetch All Results (for Map)
 // 16. Hook to fetch All Results (for Map)
 export function useElectionResults() {
   return useQuery<DashboardData>({
@@ -713,6 +713,6 @@ export function useElectionResults() {
       const { data } = await api.get("/public/results");
       return data.data;
     },
-    refetchInterval: 30000,
+    // refetchInterval: 30000,
   });
 }

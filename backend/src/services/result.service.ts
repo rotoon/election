@@ -72,37 +72,151 @@ export class ResultService {
   }
 
   async getAllResults() {
-    const constituencies = await constituencyRepository.findAll({
-      limit: 1000,
-    });
-    const results: ConstituencyResult[] = [];
+    // Batch fetch all data in parallel - no N+1 queries!
+    const [constituencies, allCandidates, allVotes, allParties, totalVotes] =
+      await Promise.all([
+        constituencyRepository.findAll({ limit: 1000 }),
+        candidateRepository.findAll({ limit: 10000 }),
+        voteRepository.getAllVoteCounts(),
+        partyRepository.findAll({ limit: 1000 }),
+        voteRepository.getTotalVotes(),
+      ]);
 
-    for (const c of constituencies.data) {
-      const result = await this.getResultsByConstituency(c.id);
-      if (result) results.push(result);
-    }
+    // Build party lookup map
+    const partyMap = new Map(
+      allParties.data.map((p: { id: number; name: string; color: string }) => [
+        p.id,
+        p,
+      ])
+    );
+
+    // Build vote counts per candidate
+    const voteCounts = new Map<number, number>();
+    allVotes.forEach(
+      (v: { candidateId: number; _count: { candidateId: number } }) => {
+        voteCounts.set(v.candidateId, v._count.candidateId);
+      }
+    );
+
+    // Group candidates by constituency with full info
+    const candidatesByConstituency = new Map<number, CandidateResult[]>();
+    allCandidates.data.forEach(
+      (c: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        candidateNumber: number;
+        partyId: number;
+        constituencyId: number;
+      }) => {
+        const party = partyMap.get(c.partyId) || {
+          id: 0,
+          name: "Unknown",
+          color: "#888",
+        };
+        const candidateResult: CandidateResult = {
+          candidateId: c.id,
+          candidateName: `${c.firstName} ${c.lastName}`,
+          candidateNumber: c.candidateNumber,
+          partyId: c.partyId,
+          partyName: party.name,
+          partyColor: party.color,
+          voteCount: voteCounts.get(c.id) || 0,
+        };
+
+        if (!candidatesByConstituency.has(c.constituencyId)) {
+          candidatesByConstituency.set(c.constituencyId, []);
+        }
+        candidatesByConstituency.get(c.constituencyId)!.push(candidateResult);
+      }
+    );
+
+    // Build results for each constituency
+    const results: ConstituencyResult[] = constituencies.data.map(
+      (c: {
+        id: number;
+        province: string;
+        zoneNumber: number;
+        isPollOpen: boolean;
+      }) => {
+        const candidates = candidatesByConstituency.get(c.id) || [];
+        // Sort by vote count descending
+        candidates.sort((a, b) => b.voteCount - a.voteCount);
+
+        return {
+          constituencyId: c.id,
+          province: c.province,
+          zoneNumber: c.zoneNumber,
+          isPollOpen: c.isPollOpen,
+          candidates,
+          totalVotes: candidates.reduce((sum, cand) => sum + cand.voteCount, 0),
+        };
+      }
+    );
 
     return {
       constituencies: results,
-      totalVotes: await voteRepository.getTotalVotes(),
+      totalVotes,
     };
   }
 
   async getPartyStats() {
-    const parties = await partyRepository.findAll({ limit: 1000 });
-    const constituencies = await constituencyRepository.findAll({
-      limit: 1000,
-    });
+    // Batch fetch all data in parallel - no N+1 queries!
+    const [parties, constituencies, allVotes, allCandidates] =
+      await Promise.all([
+        partyRepository.findAll({ limit: 1000 }),
+        constituencyRepository.findAll({ limit: 1000 }),
+        voteRepository.getAllVoteCounts(), // New batch method
+        candidateRepository.findAll({ limit: 10000 }),
+      ]);
 
-    // Count seats (winners) per party
+    // Build candidate lookup map: candidateId -> candidate
+    const candidateMap = new Map(
+      allCandidates.data.map(
+        (c: { id: number; partyId: number; constituencyId: number }) => [
+          c.id,
+          c,
+        ]
+      )
+    );
+
+    // Build vote counts per candidate
+    const voteCounts = new Map<number, number>();
+    allVotes.forEach(
+      (v: { candidateId: number; _count: { candidateId: number } }) => {
+        voteCounts.set(v.candidateId, v._count.candidateId);
+      }
+    );
+
+    // Group candidates by constituency
+    const candidatesByConstituency = new Map<
+      number,
+      { id: number; partyId: number; votes: number }[]
+    >();
+    allCandidates.data.forEach(
+      (c: { id: number; partyId: number; constituencyId: number }) => {
+        if (!candidatesByConstituency.has(c.constituencyId)) {
+          candidatesByConstituency.set(c.constituencyId, []);
+        }
+        candidatesByConstituency.get(c.constituencyId)!.push({
+          id: c.id,
+          partyId: c.partyId,
+          votes: voteCounts.get(c.id) || 0,
+        });
+      }
+    );
+
+    // Count seats (winners) per party - only from closed polls
     const seatCounts = new Map<number, number>();
 
     for (const c of constituencies.data) {
       if (c.isPollOpen) continue; // Only count closed polls
 
-      const result = await this.getResultsByConstituency(c.id);
-      if (result && result.candidates.length > 0) {
-        const winner = result.candidates[0];
+      const candidates = candidatesByConstituency.get(c.id) || [];
+      if (candidates.length > 0) {
+        // Sort by votes descending to find winner
+        candidates.sort((a, b) => b.votes - a.votes);
+        const winner = candidates[0];
         seatCounts.set(
           winner.partyId,
           (seatCounts.get(winner.partyId) || 0) + 1
