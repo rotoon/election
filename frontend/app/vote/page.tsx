@@ -33,10 +33,19 @@ export default function VotePage() {
   // Mutation
   const voteMutation = useVoteMutation()
 
+  // Derived state
   const pollOpen = constituency?.is_poll_open
   const isLoading = loadingConst || loadingCand || loadingVote
+  const canSubmit = pollOpen && selectedCandidate && !voteMutation.isPending
 
-  function handleVote() {
+  // Vote button text
+  const getButtonText = () => {
+    if (voteMutation.isPending) return 'กำลังบันทึก...'
+    return currentVote ? 'เปลี่ยนคะแนนโหวต' : 'ยืนยันการลงคะแนน'
+  }
+
+  // Handlers
+  const handleVote = () => {
     if (!pollOpen) return toast.error('หีบเลือกตั้งปิดแล้ว ไม่สามารถลงคะแนนได้')
     if (!selectedCandidate) return toast.error('กรุณาเลือกผู้สมัคร')
     if (!user?.constituency_id || !user.id) return
@@ -48,16 +57,18 @@ export default function VotePage() {
     })
   }
 
-  // Effect to pre-select candidate if user has voted
+  const handleSelectCandidate = (candidateId: number) => {
+    if (pollOpen) setSelectedCandidate(candidateId)
+  }
+
+  // Pre-select candidate if user has voted
   useEffect(() => {
-    if (currentVote && currentVote.candidate_id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (currentVote?.candidate_id) {
       setSelectedCandidate(currentVote.candidate_id)
     }
   }, [currentVote])
 
-  console.log(candidates)
-
+  // Render: Not authenticated
   if (!isAuthenticated || !user) {
     return (
       <VoterLayout>
@@ -73,19 +84,26 @@ export default function VotePage() {
     )
   }
 
+  // Render: Loading
   if (isLoading) {
     return (
       <VoterLayout>
         <div className='flex h-[50vh] items-center justify-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600'></div>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600' />
         </div>
       </VoterLayout>
     )
   }
 
+  // Find voted candidate info
+  const votedCandidate = candidates?.find(
+    (c) => c.id === currentVote?.candidate_id,
+  )
+
   return (
     <VoterLayout>
       <div className='space-y-8'>
+        {/* Header */}
         <div className='flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-100'>
           <div>
             <h1 className='text-2xl font-bold text-slate-800'>คูหาเลือกตั้ง</h1>
@@ -94,117 +112,44 @@ export default function VotePage() {
             </p>
           </div>
           <div className='mt-4 md:mt-0'>
-            {pollOpen ? (
-              <span className='px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold flex items-center'>
-                <span className='w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse'></span>
-                หีบเปิดอยู่ (Vote Open)
-              </span>
-            ) : (
-              <span className='px-4 py-2 rounded-full bg-red-100 text-red-700 font-bold flex items-center'>
-                <span className='w-2 h-2 bg-red-500 rounded-full mr-2'></span>
-                หีบปิดแล้ว (Vote Closed)
-              </span>
-            )}
+            <PollStatusBadge isOpen={pollOpen} />
           </div>
         </div>
 
-        {/* Can vote info */}
-        {currentVote && (
+        {/* Vote confirmation info */}
+        {currentVote && votedCandidate && (
           <div className='bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-center text-blue-800'>
-            <CheckCircle2 className='w-5 h-5 mr-3' />
-            คุณได้ลงคะแนนให้{' '}
-            <strong>
-              หมายเลข{' '}
-              {
-                candidates?.find((c) => c.id === currentVote.candidate_id)
-                  ?.candidate_number
-              }
-            </strong>{' '}
-            แล้ว
-            {pollOpen && ' (สามารถเปลี่ยนได้)'}
+            <CheckCircle2 className='w-5 h-5 mr-3 flex-shrink-0' />
+            <span>
+              คุณได้ลงคะแนนให้{' '}
+              <strong>หมายเลข {votedCandidate.candidate_number}</strong> แล้ว
+              {pollOpen && ' (สามารถเปลี่ยนได้)'}
+            </span>
           </div>
         )}
 
+        {/* Candidates Grid */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {candidates?.map((c) => {
-            const isSelected = selectedCandidate === c.id
-            return (
-              <Card
-                key={c.id}
-                className={`cursor-pointer transition-all border-2 relative overflow-hidden group hover:shadow-lg
-                            ${
-                              isSelected
-                                ? 'border-blue-600 bg-blue-50/50 shadow-md transform scale-[1.02]'
-                                : 'border-slate-200 hover:border-blue-300'
-                            }
-                        `}
-                onClick={() => pollOpen && setSelectedCandidate(c.id)}
-              >
-                {isSelected && (
-                  <div className='absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full z-10'>
-                    <CheckCircle2 className='w-5 h-5' />
-                  </div>
-                )}
-                <div className='aspect-[4/3] bg-slate-100 relative'>
-                  {c.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={c.image_url}
-                      alt='Candidate'
-                      className='w-full h-full object-cover'
-                    />
-                  ) : (
-                    <div className='w-full h-full flex items-center justify-center bg-slate-200 text-slate-400'>
-                      <User className='w-16 h-16' />
-                    </div>
-                  )}
-                  <div className='absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 text-xl font-bold rounded-br-xl shadow-sm'>
-                    เบอร์ {c.candidate_number}
-                  </div>
-                </div>
-                <CardHeader className='pb-2'>
-                  <CardTitle className='text-xl'>
-                    {c.first_name} {c.last_name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='flex items-center space-x-3 bg-white p-2 rounded border'>
-                    {c.party?.logo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={c.party.logo_url}
-                        alt='Party'
-                        className='w-8 h-8 object-contain'
-                      />
-                    )}
-                    <span className='font-medium text-slate-700'>
-                      {c.party?.name || 'อิสระ'}
-                    </span>
-                  </div>
-                  {c.personal_policy && (
-                    <p className='text-sm text-slate-600 line-clamp-2 italic'>
-                      &quot;{c.personal_policy}&quot;
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
+          {candidates?.map((candidate) => (
+            <CandidateCard
+              key={candidate.id}
+              candidate={candidate}
+              isSelected={selectedCandidate === candidate.id}
+              isDisabled={!pollOpen}
+              onSelect={() => handleSelectCandidate(candidate.id)}
+            />
+          ))}
         </div>
 
-        {/* Sticky Action Footer for Mobile */}
+        {/* Mobile Action Footer */}
         <div className='fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-center shadow-lg md:hidden z-20'>
           <Button
             size='lg'
             className='w-full max-w-sm text-lg shadow-xl'
             onClick={handleVote}
-            disabled={!pollOpen || !selectedCandidate || voteMutation.isPending}
+            disabled={!canSubmit}
           >
-            {voteMutation.isPending
-              ? 'กำลังบันทึก...'
-              : currentVote
-                ? 'เปลี่ยนคะแนนโหวต'
-                : 'ยืนยันการลงคะแนน'}
+            {getButtonText()}
           </Button>
         </div>
 
@@ -214,16 +159,131 @@ export default function VotePage() {
             size='lg'
             className='text-lg px-12 py-6 shadow-xl'
             onClick={handleVote}
-            disabled={!pollOpen || !selectedCandidate || voteMutation.isPending}
+            disabled={!canSubmit}
           >
-            {voteMutation.isPending
-              ? 'กำลังบันทึก...'
-              : currentVote
-                ? 'เปลี่ยนคะแนนโหวต'
-                : 'ยืนยันการลงคะแนน'}
+            {getButtonText()}
           </Button>
         </div>
       </div>
     </VoterLayout>
+  )
+}
+
+// === Sub Components ===
+
+interface PollStatusBadgeProps {
+  isOpen?: boolean
+}
+
+function PollStatusBadge({ isOpen }: PollStatusBadgeProps) {
+  if (isOpen) {
+    return (
+      <span className='px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold flex items-center'>
+        <span className='w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse' />
+        หีบเปิดอยู่
+      </span>
+    )
+  }
+  return (
+    <span className='px-4 py-2 rounded-full bg-red-100 text-red-700 font-bold flex items-center'>
+      <span className='w-2 h-2 bg-red-500 rounded-full mr-2' />
+      หีบปิดแล้ว
+    </span>
+  )
+}
+
+interface CandidateCardProps {
+  candidate: {
+    id: number
+    candidate_number: number
+    first_name: string
+    last_name: string
+    image_url?: string
+    personal_policy?: string
+    party?: {
+      name: string
+      logo_url?: string
+    } | null
+  }
+  isSelected: boolean
+  isDisabled: boolean
+  onSelect: () => void
+}
+
+function CandidateCard({
+  candidate,
+  isSelected,
+  isDisabled,
+  onSelect,
+}: CandidateCardProps) {
+  return (
+    <Card
+      className={`cursor-pointer transition-all border-2 relative overflow-hidden group hover:shadow-lg
+        ${
+          isSelected
+            ? 'border-blue-600 bg-blue-50/50 shadow-md transform scale-[1.02]'
+            : 'border-slate-200 hover:border-blue-300'
+        }
+        ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}
+      `}
+      onClick={onSelect}
+    >
+      {/* Selected indicator */}
+      {isSelected && (
+        <div className='absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full z-10'>
+          <CheckCircle2 className='w-5 h-5' />
+        </div>
+      )}
+
+      {/* Candidate image */}
+      <div className='aspect-[4/3] bg-slate-100 relative'>
+        {candidate.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={candidate.image_url}
+            alt={`${candidate.first_name} ${candidate.last_name}`}
+            className='w-full h-full object-cover'
+          />
+        ) : (
+          <div className='w-full h-full flex items-center justify-center bg-slate-200 text-slate-400'>
+            <User className='w-16 h-16' />
+          </div>
+        )}
+        <div className='absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 text-xl font-bold rounded-br-xl shadow-sm'>
+          เบอร์ {candidate.candidate_number}
+        </div>
+      </div>
+
+      {/* Candidate info */}
+      <CardHeader className='pb-2'>
+        <CardTitle className='text-xl'>
+          {candidate.first_name} {candidate.last_name}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className='space-y-4'>
+        {/* Party info */}
+        <div className='flex items-center space-x-3 bg-white p-2 rounded border'>
+          {candidate.party?.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={candidate.party.logo_url}
+              alt={candidate.party.name}
+              className='w-8 h-8 object-contain'
+            />
+          )}
+          <span className='font-medium text-slate-700'>
+            {candidate.party?.name || 'อิสระ'}
+          </span>
+        </div>
+
+        {/* Policy */}
+        {candidate.personal_policy && (
+          <p className='text-sm text-slate-600 line-clamp-2 italic'>
+            &quot;{candidate.personal_policy}&quot;
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

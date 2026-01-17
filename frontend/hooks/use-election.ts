@@ -187,6 +187,95 @@ export function useConstituencies() {
   })
 }
 
+// Types for EC control constituencies
+export interface ManageConstituenciesMeta {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface ManageConstituenciesResult {
+  constituencies: Constituency[]
+  meta: ManageConstituenciesMeta
+}
+
+// 5b. Hook for EC Control Page with server-side pagination
+export function useManageConstituencies(params: {
+  province?: string | null
+  page?: number
+  limit?: number
+}) {
+  const { province, page = 1, limit = 10 } = params
+
+  return useQuery<ManageConstituenciesResult>({
+    queryKey: ['manage-constituencies', province, page, limit],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams()
+      queryParams.set('page', page.toString())
+      queryParams.set('limit', limit.toString())
+
+      if (province && province !== 'all') {
+        queryParams.set('province', province)
+      }
+
+      const { data } = await api.get(
+        `/ec/control/constituencies?${queryParams.toString()}`,
+      )
+
+      const rawData = data.data || []
+      const meta = data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const constituencies = rawData.map((c: any) => ({
+        ...c,
+        zone_number: c.zoneNumber,
+        is_poll_open: c.isPollOpen,
+      })) as Constituency[]
+
+      return { constituencies, meta }
+    },
+  })
+}
+
+// 5c. Hook for Admin Constituencies Page with server-side pagination
+export function useAdminConstituencies(params: {
+  province?: string | null
+  page?: number
+  limit?: number
+}) {
+  const { province, page = 1, limit = 10 } = params
+
+  return useQuery<ManageConstituenciesResult>({
+    queryKey: ['admin-constituencies', province, page, limit],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams()
+      queryParams.set('page', page.toString())
+      queryParams.set('limit', limit.toString())
+
+      if (province && province !== 'all') {
+        queryParams.set('province', province)
+      }
+
+      const { data } = await api.get(
+        `/admin/constituencies?${queryParams.toString()}`,
+      )
+
+      const rawData = data.data || []
+      const meta = data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const constituencies = rawData.map((c: any) => ({
+        ...c,
+        zone_number: c.zoneNumber,
+        is_poll_open: c.isPollOpen,
+      })) as Constituency[]
+
+      return { constituencies, meta }
+    },
+  })
+}
+
 // 6. Hook to fetch Detailed Results for a Constituency
 export interface ConstituencyResultData {
   pollOpen: boolean
@@ -665,6 +754,76 @@ export function useUsers() {
         constituency_id: u.constituencyId,
         created_at: u.createdAt,
       }))
+    },
+  })
+}
+
+// Types for admin users
+export interface ManageUsersMeta {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface ManageUser {
+  id: string
+  email: string
+  full_name: string
+  national_id: string
+  role: string
+  constituency_id?: number
+  created_at?: string
+}
+
+export interface ManageUsersResult {
+  users: ManageUser[]
+  meta: ManageUsersMeta
+}
+
+// 13b. Hook for Admin Users Page with server-side pagination
+export function useManageUsers(params: {
+  role?: string | null
+  page?: number
+  limit?: number
+}) {
+  const { role, page = 1, limit = 10 } = params
+
+  return useQuery<ManageUsersResult>({
+    queryKey: ['manage-users', role, page, limit],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams()
+      queryParams.set('page', page.toString())
+      queryParams.set('limit', limit.toString())
+
+      if (role && role !== 'all') {
+        queryParams.set('role', role)
+      }
+
+      const { data } = await api.get(`/admin/users?${queryParams.toString()}`)
+
+      interface ApiUser {
+        id: string
+        email: string
+        nationalId: string
+        fullName: string
+        constituencyId: number
+        createdAt: string
+        role: string
+      }
+
+      const rawData = data.data || []
+      const meta = data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 }
+
+      const users = rawData.map((u: ApiUser) => ({
+        ...u,
+        national_id: u.nationalId,
+        full_name: u.fullName,
+        constituency_id: u.constituencyId,
+        created_at: u.createdAt,
+      })) as ManageUser[]
+
+      return { users, meta }
     },
   })
 }

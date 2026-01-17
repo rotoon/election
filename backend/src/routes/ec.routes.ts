@@ -148,13 +148,18 @@ router.delete('/candidates/:id', async (req, res, next) => {
 
 // === Election Control ===
 
-// GET /api/ec/control/constituencies?page=1&limit=50
+// GET /api/ec/control/constituencies?page=1&limit=50&province=Bangkok
 router.get('/control/constituencies', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1
     const limit = parseInt(req.query.limit as string) || 50
+    const province = req.query.province as string | undefined
 
-    const result = await constituencyService.getAll({ page, limit })
+    const result = await constituencyService.getFiltered({
+      page,
+      limit,
+      province,
+    })
     res.json({ success: true, ...result })
   } catch (error) {
     next(error)
