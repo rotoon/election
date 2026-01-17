@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,16 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -26,8 +26,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Constituency,
   useConstituencies,
@@ -35,48 +35,97 @@ import {
   useDeleteCandidateMutation,
   useManageCandidates,
   useParties,
-} from "@/hooks/use-election";
-import { Plus, Trash, User } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+} from '@/hooks/use-election'
+import { ChevronLeft, ChevronRight, Plus, Trash, User } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 
 export default function ManageCandidatesPage() {
-  const [filterConstituency, setFilterConstituency] = useState<string>("all");
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  // Hooks
-  const { data: candidates, isLoading } =
-    useManageCandidates(filterConstituency);
-  const { data: parties } = useParties();
-  const { data: constituencies } = useConstituencies();
+  // Read from URL params or use defaults
+  const [filterConstituency, setFilterConstituency] = useState<string>(
+    searchParams.get('constituency') || 'all',
+  )
+  const [filterParty, setFilterParty] = useState<string>(
+    searchParams.get('party') || 'all',
+  )
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get('page') || '1'),
+  )
+  const [itemsPerPage, setItemsPerPage] = useState(
+    parseInt(searchParams.get('limit') || '10'),
+  )
 
-  const createMutation = useCreateCandidateMutation();
-  const deleteMutation = useDeleteCandidateMutation();
+  // Update URL when params change
+  const updateURL = useCallback(() => {
+    const params = new URLSearchParams()
+    if (filterConstituency !== 'all')
+      params.set('constituency', filterConstituency)
+    if (filterParty !== 'all') params.set('party', filterParty)
+    if (currentPage !== 1) params.set('page', currentPage.toString())
+    if (itemsPerPage !== 10) params.set('limit', itemsPerPage.toString())
 
-  const [isOpen, setIsOpen] = useState(false);
+    const queryString = params.toString()
+    router.push(queryString ? `?${queryString}` : '/ec/candidates', {
+      scroll: false,
+    })
+  }, [filterConstituency, filterParty, currentPage, itemsPerPage, router])
+
+  useEffect(() => {
+    updateURL()
+  }, [updateURL])
+
+  // Hooks - now using server-side pagination
+  const { data, isLoading } = useManageCandidates({
+    constituencyId: filterConstituency,
+    partyId: filterParty,
+    page: currentPage,
+    limit: itemsPerPage,
+  })
+  const { data: parties } = useParties()
+  const { data: constituencies } = useConstituencies()
+
+  const candidates = data?.candidates || []
+  const meta = data?.meta || {
+    total: 0,
+    page: 1,
+    limit: itemsPerPage,
+    totalPages: 1,
+  }
+
+  const createMutation = useCreateCandidateMutation()
+  const deleteMutation = useDeleteCandidateMutation()
+
+  const [isOpen, setIsOpen] = useState(false)
 
   // Form state
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [number, setNumber] = useState("");
-  const [partyId, setPartyId] = useState("");
-  const [constituencyId, setConstituencyId] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [policy, setPolicy] = useState("");
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [number, setNumber] = useState('')
+  const [partyId, setPartyId] = useState('')
+  const [constituencyId, setConstituencyId] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [policy, setPolicy] = useState('')
 
   const resetForm = () => {
-    setFirstName("");
-    setLastName("");
-    setNumber("");
-    setPartyId("");
-    setConstituencyId("");
-    setImageUrl("");
-    setPolicy("");
-  };
+    setFirstName('')
+    setLastName('')
+    setNumber('')
+    setPartyId('')
+    setConstituencyId('')
+    setImageUrl('')
+    setPolicy('')
+  }
 
   async function handleCreate() {
     if (!firstName || !lastName || !number || !partyId || !constituencyId) {
-      toast.error("กรุณากรอกข้อมูลสำคัญให้ครบ");
-      return;
+      toast.error('กรุณากรอกข้อมูลสำคัญให้ครบ')
+      return
     }
 
     createMutation.mutate(
@@ -91,127 +140,180 @@ export default function ManageCandidatesPage() {
       },
       {
         onSuccess: () => {
-          setIsOpen(false);
-          resetForm();
+          setIsOpen(false)
+          resetForm()
         },
-      }
-    );
+      },
+    )
   }
 
   // Helper formats
   const formatConstituency = (c: Constituency | null | undefined) =>
-    c ? `${c.province} เขต ${c.zone_number}` : "-";
+    c ? `${c.province} เขต ${c.zone_number}` : '-'
+
+  // Reset page when filters change
+  const handleFilterPartyChange = (value: string) => {
+    setFilterParty(value)
+    setCurrentPage(1)
+  }
+
+  const handleFilterConstituencyChange = (value: string) => {
+    setFilterConstituency(value)
+    setCurrentPage(1)
+  }
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value))
+    setCurrentPage(1)
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">จัดการผู้สมัคร</h2>
+    <div className='space-y-6'>
+      <div className='flex justify-between items-center'>
+        <h2 className='text-3xl font-bold tracking-tight'>จัดการผู้สมัคร</h2>
         <Input
-          className="w-64"
-          type="text"
+          className='w-64'
+          type='text'
           disabled
-          value={`จำนวนผู้สมัครทั้งหมด: ${candidates?.length || 0}`}
+          value={`จำนวนผู้สมัคร: ${meta.total} รายการ`}
         />
       </div>
 
-      <div className="flex items-center space-x-4 bg-white p-4 rounded-lg border">
-        <span className="text-sm font-medium">กรองตามเขตเลือกตั้ง:</span>
-        <Select
-          value={filterConstituency}
-          onValueChange={setFilterConstituency}
-        >
-          <SelectTrigger className="w-[300px]">
-            <SelectValue placeholder="เลือกเขตเลือกตั้ง" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ทั้งหมด</SelectItem>
-            {constituencies?.map((c) => (
-              <SelectItem key={c.id} value={c.id.toString()}>
-                {c.province} เขต {c.zone_number}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className='flex flex-wrap items-center gap-4 bg-white p-4 rounded-lg border'>
+        <div className='flex items-center space-x-2'>
+          <span className='text-sm font-medium'>เขต:</span>
+          <Select
+            value={filterConstituency}
+            onValueChange={handleFilterConstituencyChange}
+          >
+            <SelectTrigger className='w-[250px]'>
+              <SelectValue placeholder='เลือกเขตเลือกตั้ง' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>ทั้งหมด</SelectItem>
+              {constituencies?.map((c) => (
+                <SelectItem
+                  key={c.id}
+                  value={c.id.toString()}
+                >
+                  {c.province} เขต {c.zone_number}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <div className="flex-1"></div>
+        <div className='flex items-center space-x-2'>
+          <span className='text-sm font-medium'>พรรค:</span>
+          <Select
+            value={filterParty}
+            onValueChange={handleFilterPartyChange}
+          >
+            <SelectTrigger className='w-[200px]'>
+              <SelectValue placeholder='เลือกพรรค' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>ทั้งหมด</SelectItem>
+              {parties?.map((p) => (
+                <SelectItem
+                  key={p.id}
+                  value={p.id.toString()}
+                >
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className='flex-1'></div>
 
         <Dialog
           open={isOpen}
           onOpenChange={(v) => {
-            setIsOpen(v);
-            if (!v) resetForm();
+            setIsOpen(v)
+            if (!v) resetForm()
           }}
         >
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" /> เพิ่มผู้สมัคร
+              <Plus className='mr-2 h-4 w-4' /> เพิ่มผู้สมัคร
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className='max-w-2xl'>
             <DialogHeader>
               <DialogTitle>เพิ่มผู้สมัครใหม่</DialogTitle>
               <DialogDescription>
                 กำหนดข้อมูลผู้สมัคร สังกัดพรรค และเขตเลือกตั้ง
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fname">ชื่อ</Label>
+            <div className='grid gap-4 py-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='fname'>ชื่อ</Label>
                   <Input
-                    id="fname"
+                    id='fname'
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lname">นามสกุล</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='lname'>นามสกุล</Label>
                   <Input
-                    id="lname"
+                    id='lname'
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="c_id">เขตเลือกตั้ง</Label>
+              <div className='grid grid-cols-3 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='c_id'>เขตเลือกตั้ง</Label>
                   <Select
                     value={constituencyId}
                     onValueChange={setConstituencyId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="เลือกเขต" />
+                      <SelectValue placeholder='เลือกเขต' />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[200px]">
+                    <SelectContent className='max-h-[200px]'>
                       {constituencies?.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
+                        <SelectItem
+                          key={c.id}
+                          value={c.id.toString()}
+                        >
                           {c.province} เขต {c.zone_number}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="number">หมายเลข</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='number'>หมายเลข</Label>
                   <Input
-                    id="number"
-                    type="number"
+                    id='number'
+                    type='number'
                     value={number}
                     onChange={(e) => setNumber(e.target.value)}
-                    placeholder="เช่น 1"
+                    placeholder='เช่น 1'
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="party">พรรคสังกัด</Label>
-                  <Select value={partyId} onValueChange={setPartyId}>
+                <div className='space-y-2'>
+                  <Label htmlFor='party'>พรรคสังกัด</Label>
+                  <Select
+                    value={partyId}
+                    onValueChange={setPartyId}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="เลือกพรรค" />
+                      <SelectValue placeholder='เลือกพรรค' />
                     </SelectTrigger>
                     <SelectContent>
                       {parties?.map((p) => (
-                        <SelectItem key={p.id} value={p.id.toString()}>
+                        <SelectItem
+                          key={p.id}
+                          value={p.id.toString()}
+                        >
                           {p.name}
                         </SelectItem>
                       ))}
@@ -220,20 +322,20 @@ export default function ManageCandidatesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="img">รูปโปรไฟล์ (URL)</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='img'>รูปโปรไฟล์ (URL)</Label>
                 <Input
-                  id="img"
+                  id='img'
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder='https://...'
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="policy">นโยบายส่วนตัว (ถ้ามี)</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='policy'>นโยบายส่วนตัว (ถ้ามี)</Label>
                 <Textarea
-                  id="policy"
+                  id='policy'
                   value={policy}
                   onChange={(e) => setPolicy(e.target.value)}
                   rows={3}
@@ -245,14 +347,14 @@ export default function ManageCandidatesPage() {
                 onClick={handleCreate}
                 disabled={createMutation.isPending}
               >
-                {createMutation.isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                {createMutation.isPending ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="border rounded-md">
+      <div className='border rounded-md'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -261,7 +363,7 @@ export default function ManageCandidatesPage() {
               <TableHead>ชื่อ-นามสกุล</TableHead>
               <TableHead>สังกัดพรรค</TableHead>
               <TableHead>เขตเลือกตั้ง</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className='text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -269,7 +371,7 @@ export default function ManageCandidatesPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-24 text-muted-foreground"
+                  className='text-center h-24 text-muted-foreground'
                 >
                   กำลังโหลด...
                 </TableCell>
@@ -278,16 +380,25 @@ export default function ManageCandidatesPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-24 text-muted-foreground"
+                  className='text-center h-24 text-muted-foreground'
                 >
                   ไม่พบผู้สมัครในเขตนี้
+                </TableCell>
+              </TableRow>
+            ) : candidates.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className='text-center h-24 text-muted-foreground'
+                >
+                  ไม่พบผู้สมัครตามเงื่อนไขที่เลือก
                 </TableCell>
               </TableRow>
             ) : (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               candidates.map((c: any) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-bold text-lg text-blue-600">
+                  <TableCell className='font-bold text-lg text-blue-600'>
                     {c.candidate_number}
                   </TableCell>
                   <TableCell>
@@ -295,12 +406,12 @@ export default function ManageCandidatesPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={c.image_url}
-                        alt="Candidate"
-                        className="w-10 h-10 object-cover rounded-full"
+                        alt='Candidate'
+                        className='w-10 h-10 object-cover rounded-full'
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-neutral-200 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-neutral-400" />
+                      <div className='w-10 h-10 bg-neutral-200 rounded-full flex items-center justify-center'>
+                        <User className='w-5 h-5 text-neutral-400' />
                       </div>
                     )}
                   </TableCell>
@@ -312,29 +423,29 @@ export default function ManageCandidatesPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={c.parties.logo_url}
-                        alt="Party Logo"
-                        className="w-5 h-5 inline mr-2 rounded-full"
+                        alt='Party Logo'
+                        className='w-5 h-5 inline mr-2 rounded-full'
                       />
                     )}
-                    {c.parties?.name || "-"}
+                    {c.parties?.name || '-'}
                   </TableCell>
                   <TableCell>{formatConstituency(c.constituencies)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className='text-right'>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      variant='ghost'
+                      size='icon'
+                      className='text-red-500 hover:text-red-600 hover:bg-red-50'
                       onClick={() => {
                         if (
                           confirm(
-                            `ยืนยันการลบผู้สมัครหมายเลข ${c.candidate_number} (${c.first_name})?`
+                            `ยืนยันการลบผู้สมัครหมายเลข ${c.candidate_number} (${c.first_name})?`,
                           )
                         ) {
-                          deleteMutation.mutate(c.id);
+                          deleteMutation.mutate(c.id)
                         }
                       }}
                     >
-                      <Trash className="h-4 w-4" />
+                      <Trash className='h-4 w-4' />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -343,6 +454,131 @@ export default function ManageCandidatesPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      <div className='flex items-center justify-between bg-white p-4 rounded-lg border'>
+        <div className='flex items-center space-x-2'>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={handleItemsPerPageChange}
+          >
+            <SelectTrigger className='w-[120px]'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <SelectItem
+                  key={size}
+                  value={size.toString()}
+                >
+                  {size} รายการ
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className='text-sm text-muted-foreground'>
+            แสดง {meta.total > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} -{' '}
+            {Math.min(currentPage * itemsPerPage, meta.total)} จาก {meta.total}{' '}
+            รายการ
+          </div>
+        </div>
+        {meta.totalPages > 1 && (
+          <div className='flex items-center space-x-1'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className='h-4 w-4' />
+              <ChevronLeft className='h-4 w-4 -ml-2' />
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className='h-4 w-4' />
+            </Button>
+
+            {/* Page numbers */}
+            {(() => {
+              const pages: (number | string)[] = []
+              const totalPages = meta.totalPages
+
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i)
+              } else {
+                if (currentPage <= 4) {
+                  pages.push(1, 2, 3, 4, 5, '...', totalPages)
+                } else if (currentPage >= totalPages - 3) {
+                  pages.push(
+                    1,
+                    '...',
+                    totalPages - 4,
+                    totalPages - 3,
+                    totalPages - 2,
+                    totalPages - 1,
+                    totalPages,
+                  )
+                } else {
+                  pages.push(
+                    1,
+                    '...',
+                    currentPage - 1,
+                    currentPage,
+                    currentPage + 1,
+                    '...',
+                    totalPages,
+                  )
+                }
+              }
+
+              return pages.map((page, idx) =>
+                typeof page === 'number' ? (
+                  <Button
+                    key={idx}
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => setCurrentPage(page)}
+                    className='w-9'
+                  >
+                    {page}
+                  </Button>
+                ) : (
+                  <span
+                    key={idx}
+                    className='px-2 text-muted-foreground'
+                  >
+                    ...
+                  </span>
+                ),
+              )
+            })()}
+
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() =>
+                setCurrentPage((p) => Math.min(meta.totalPages, p + 1))
+              }
+              disabled={currentPage === meta.totalPages}
+            >
+              <ChevronRight className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(meta.totalPages)}
+              disabled={currentPage === meta.totalPages}
+            >
+              <ChevronRight className='h-4 w-4' />
+              <ChevronRight className='h-4 w-4 -ml-2' />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }

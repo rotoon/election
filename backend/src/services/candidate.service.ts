@@ -1,82 +1,91 @@
-import { AppError } from "../middleware/error.middleware.js";
+import { AppError } from '../middleware/error.middleware.js'
 import {
   candidateRepository,
   constituencyRepository,
   partyRepository,
-} from "../repositories/index.js";
-import { PaginationParams } from "../repositories/profile.repository.js";
+} from '../repositories/index.js'
+import { PaginationParams } from '../repositories/profile.repository.js'
 
 export class CandidateService {
   async getAll(params: PaginationParams = {}) {
-    return candidateRepository.findAll(params);
+    return candidateRepository.findAll(params)
   }
 
   async getById(id: number) {
-    const candidate = await candidateRepository.findById(id);
+    const candidate = await candidateRepository.findById(id)
     if (!candidate) {
-      throw new AppError(404, "ไม่พบผู้สมัคร");
+      throw new AppError(404, 'ไม่พบผู้สมัคร')
     }
-    return candidate;
+    return candidate
   }
 
   async getByConstituency(
     constituencyId: number,
-    params: PaginationParams = {}
+    params: PaginationParams = {},
   ) {
-    return candidateRepository.findByConstituency(constituencyId, params);
+    return candidateRepository.findByConstituency(constituencyId, params)
+  }
+
+  async getFiltered(params: {
+    page?: number
+    limit?: number
+    constituencyId?: number
+    partyId?: number
+  }) {
+    return candidateRepository.findFiltered(params)
   }
 
   async create(data: {
-    firstName: string;
-    lastName: string;
-    candidateNumber: number;
-    imageUrl?: string;
-    personalPolicy?: string;
-    partyId: number;
-    constituencyId: number;
+    firstName: string
+    lastName: string
+    candidateNumber: number
+    imageUrl?: string
+    personalPolicy?: string
+    partyId: number
+    constituencyId: number
   }) {
-    const party = await partyRepository.findById(data.partyId);
+    const party = await partyRepository.findById(data.partyId)
     if (!party) {
-      throw new AppError(400, "ไม่พบพรรคการเมืองที่เลือก");
+      throw new AppError(400, 'ไม่พบพรรคการเมืองที่เลือก')
     }
 
     const constituency = await constituencyRepository.findById(
-      data.constituencyId
-    );
+      data.constituencyId,
+    )
     if (!constituency) {
-      throw new AppError(400, "ไม่พบเขตเลือกตั้งที่เลือก");
+      throw new AppError(400, 'ไม่พบเขตเลือกตั้งที่เลือก')
     }
 
     return candidateRepository.create({
       firstName: data.firstName,
       lastName: data.lastName,
       candidateNumber: data.candidateNumber,
-      imageUrl: data.imageUrl || "",
-      personalPolicy: data.personalPolicy || "",
+      imageUrl: data.imageUrl || '',
+      personalPolicy: data.personalPolicy || '',
       partyId: data.partyId,
       constituencyId: data.constituencyId,
-    });
+    })
   }
 
   async update(
     id: number,
     data: {
-      firstName?: string;
-      lastName?: string;
-      candidateNumber?: number;
-      imageUrl?: string;
-      personalPolicy?: string;
-      partyId?: number;
-    }
+      firstName?: string
+      lastName?: string
+      candidateNumber?: number
+      imageUrl?: string
+      personalPolicy?: string
+      partyId?: number
+    },
   ) {
-    await this.getById(id);
-    return candidateRepository.update(id, data);
+    await this.getById(id)
+    return candidateRepository.update(id, data)
   }
 
   async delete(id: number) {
-    await this.getById(id);
-    return candidateRepository.delete(id);
+    await this.getById(id)
+    return candidateRepository.delete(id)
   }
 }
 
-export const candidateService = new CandidateService();
+export const candidateService = new CandidateService()
