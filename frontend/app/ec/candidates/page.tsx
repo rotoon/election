@@ -110,6 +110,7 @@ export default function ManageCandidatesPage() {
   const [constituencyId, setConstituencyId] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [policy, setPolicy] = useState('')
+  const [nationalId, setNationalId] = useState('')
 
   const resetForm = () => {
     setFirstName('')
@@ -119,10 +120,18 @@ export default function ManageCandidatesPage() {
     setConstituencyId('')
     setImageUrl('')
     setPolicy('')
+    setNationalId('')
   }
 
   async function handleCreate() {
-    if (!firstName || !lastName || !number || !partyId || !constituencyId) {
+    if (
+      !firstName ||
+      !lastName ||
+      !number ||
+      !partyId ||
+      !constituencyId ||
+      !nationalId
+    ) {
       toast.error('กรุณากรอกข้อมูลสำคัญให้ครบ')
       return
     }
@@ -135,7 +144,9 @@ export default function ManageCandidatesPage() {
         party_id: parseInt(partyId),
         constituency_id: parseInt(constituencyId),
         image_url: imageUrl,
+
         personal_policy: policy,
+        national_id: nationalId,
       },
       {
         onSuccess: () => {
@@ -247,7 +258,17 @@ export default function ManageCandidatesPage() {
               </DialogDescription>
             </DialogHeader>
             <div className='grid gap-4 py-4'>
-              <div className='grid grid-cols-2 gap-4'>
+              <div className='grid grid-cols-3 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='nationalId'>เลขบัตร ปชช.</Label>
+                  <Input
+                    id='nationalId'
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value)}
+                    maxLength={13}
+                    placeholder='13 หลัก'
+                  />
+                </div>
                 <div className='space-y-2'>
                   <Label htmlFor='fname'>ชื่อ</Label>
                   <Input

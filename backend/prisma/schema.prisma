@@ -57,6 +57,7 @@ model Candidate {
     firstName       String       @map("first_name")
     lastName        String       @map("last_name")
     candidateNumber Int          @map("candidate_number")
+    nationalId      String       @unique @map("national_id")
     imageUrl        String       @default("") @map("image_url")
     personalPolicy  String       @default("") @map("personal_policy")
     partyId         Int          @map("party_id")

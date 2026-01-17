@@ -79,6 +79,8 @@ export function useManageCandidates(params: {
         candidateNumber: number
         imageUrl: string
         personalPolicy: string
+
+        nationalId: string
         constituencyId: number
         party?: { id: number; name: string; logoUrl: string }
         constituency?: {
@@ -104,6 +106,7 @@ export function useManageCandidates(params: {
         candidate_number: c.candidateNumber,
         image_url: c.imageUrl,
         personal_policy: c.personalPolicy,
+        national_id: c.nationalId,
         constituency_id: c.constituencyId,
         parties: c.party
           ? {
@@ -134,6 +137,7 @@ interface CreateCandidatePayload {
   constituency_id: number
   image_url: string
   personal_policy: string
+  national_id: string
 }
 
 export function useCreateCandidateMutation() {
@@ -148,6 +152,7 @@ export function useCreateCandidateMutation() {
         constituencyId: payload.constituency_id,
         imageUrl: payload.image_url,
         personalPolicy: payload.personal_policy,
+        nationalId: payload.national_id,
       }
       await api.post('/ec/candidates', apiPayload)
     },
@@ -155,6 +160,7 @@ export function useCreateCandidateMutation() {
       toast.success('เพิ่มผู้สมัครสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['manage-candidates'] })
       queryClient.invalidateQueries({ queryKey: ['candidates'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
     },
     onError: () => {
       toast.error('เพิ่มผู้สมัครไม่สำเร็จ')
@@ -171,6 +177,8 @@ export function useDeleteCandidateMutation() {
     onSuccess: () => {
       toast.success('ลบผู้สมัครสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['manage-candidates'] })
+      queryClient.invalidateQueries({ queryKey: ['candidates'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
     },
     onError: () => toast.error('ลบไม่สำเร็จ'),
   })

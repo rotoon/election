@@ -119,6 +119,7 @@ router.post('/candidates', async (req, res, next) => {
       candidateNumber: z.number().min(1, 'หมายเลขต้องมากกว่า 0'),
       imageUrl: z.string().optional(),
       personalPolicy: z.string().optional(),
+      nationalId: z.string().length(13, 'เลขบัตรประชาชนต้องมี 13 หลัก'),
       partyId: z.number(),
       constituencyId: z.number(),
     })

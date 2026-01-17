@@ -5,6 +5,7 @@ export interface Candidate {
   first_name: string
   last_name: string
   candidate_number: number
+  national_id?: string
   image_url: string
   personal_policy: string
   party?: {

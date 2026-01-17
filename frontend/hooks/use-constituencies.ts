@@ -125,6 +125,7 @@ export function useTogglePollMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['manage-constituencies'] })
       queryClient.invalidateQueries({ queryKey: ['constituency'] })
       queryClient.invalidateQueries({ queryKey: ['results'] })
       toast.success('บันทึกสถานะเรียบร้อย')
@@ -142,6 +143,7 @@ export function useOpenAllPollsMutation() {
     onSuccess: () => {
       toast.success('เปิดหีบเลือกตั้งทั้งหมดแล้ว')
       queryClient.invalidateQueries({ queryKey: ['constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['manage-constituencies'] })
     },
     onError: () => toast.error('เกิดข้อผิดพลาดในการเปิดหีบ'),
   })
@@ -156,6 +158,7 @@ export function useCloseAllPollsMutation() {
     onSuccess: () => {
       toast.success('ปิดหีบเลือกตั้งทั้งหมดแล้ว')
       queryClient.invalidateQueries({ queryKey: ['constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['manage-constituencies'] })
     },
     onError: () => toast.error('เกิดข้อผิดพลาดในการปิดหีบ'),
   })
@@ -170,6 +173,10 @@ export function useCreateConstituencyMutation() {
     onSuccess: () => {
       toast.success('เพิ่มเขตเลือกตั้งสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['manage-constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || 'เพิ่มเขตเลือกตั้งไม่สำเร็จ')
@@ -186,6 +193,10 @@ export function useDeleteConstituencyMutation() {
     onSuccess: () => {
       toast.success('ลบเขตเลือกตั้งสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['manage-constituencies'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || 'ลบไม่สำเร็จ')

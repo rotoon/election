@@ -3,6 +3,7 @@ import {
   candidateRepository,
   constituencyRepository,
   partyRepository,
+  profileRepository,
 } from '../repositories/index.js'
 import { PaginationParams } from '../repositories/profile.repository.js'
 
@@ -43,7 +44,18 @@ export class CandidateService {
     personalPolicy?: string
     partyId: number
     constituencyId: number
+    nationalId: string
   }) {
+    // Check if national ID belongs to an EC
+    const existingUser = await profileRepository.findByNationalId(
+      data.nationalId,
+    )
+    if (existingUser && existingUser.role === 'ec') {
+      throw new AppError(
+        400,
+        'ผู้ที่มีสิทธิ์เป็น กกต. ไม่สามารถสมัครรับเลือกตั้งได้',
+      )
+    }
     const party = await partyRepository.findById(data.partyId)
     if (!party) {
       throw new AppError(400, 'ไม่พบพรรคการเมืองที่เลือก')
@@ -64,6 +76,7 @@ export class CandidateService {
       personalPolicy: data.personalPolicy || '',
       partyId: data.partyId,
       constituencyId: data.constituencyId,
+      nationalId: data.nationalId,
     })
   }
 

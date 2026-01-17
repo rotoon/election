@@ -79,6 +79,8 @@ export function useCreatePartyMutation() {
       toast.success('เพิ่มพรรคสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['parties'] })
       queryClient.invalidateQueries({ queryKey: ['party-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || 'เพิ่มพรรคไม่สำเร็จ')
@@ -108,6 +110,8 @@ export function useUpdatePartyMutation() {
       toast.success('แก้ไขข้อมูลสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['parties'] })
       queryClient.invalidateQueries({ queryKey: ['party-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || 'แก้ไขไม่สำเร็จ')
@@ -125,6 +129,8 @@ export function useDeletePartyMutation() {
       toast.success('ลบพรรคสำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['parties'] })
       queryClient.invalidateQueries({ queryKey: ['party-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || 'ลบไม่สำเร็จ')

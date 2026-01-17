@@ -48,6 +48,9 @@ export function useVoteMutation() {
       queryClient.invalidateQueries({
         queryKey: ['results', variables.constituencyId],
       })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['ec-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
@@ -79,6 +82,7 @@ export function useConstituencyResults(
         partyId: number
         partyName: string
         partyColor: string
+        imageUrl: string
       }
 
       // Map candidates to results with rank
@@ -94,7 +98,7 @@ export function useConstituencyResults(
               ? r.candidateName.split(' ').slice(1).join(' ')
               : '',
             candidate_number: r.candidateNumber,
-            image_url: '',
+            image_url: r.imageUrl || '',
             personal_policy: '',
             party: {
               id: r.partyId,

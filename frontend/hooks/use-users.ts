@@ -85,6 +85,7 @@ export function useUpdateUserRoleMutation() {
       toast.success('อัปเดตสิทธิ์สำเร็จ')
       queryClient.invalidateQueries({ queryKey: ['users'] })
       queryClient.invalidateQueries({ queryKey: ['manage-users'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
     },
     onError: () => toast.error('อัปเดตไม่สำเร็จ'),
   })
