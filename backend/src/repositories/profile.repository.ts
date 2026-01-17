@@ -16,6 +16,18 @@ export interface PaginatedResult<T> {
   }
 }
 
+const selectWithoutPassword = {
+  id: true,
+  email: true,
+  nationalId: true,
+  fullName: true,
+  address: true,
+  role: true,
+  constituencyId: true,
+  createdAt: true,
+  constituency: true,
+}
+
 export class ProfileRepository {
   async findAll(params: PaginationParams = {}): Promise<PaginatedResult<any>> {
     const page = params.page || 1
@@ -27,7 +39,7 @@ export class ProfileRepository {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { constituency: true },
+        select: selectWithoutPassword,
       }),
       prisma.profile.count(),
     ])
@@ -64,7 +76,7 @@ export class ProfileRepository {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { constituency: true },
+        select: selectWithoutPassword,
       }),
       prisma.profile.count({ where }),
     ])
@@ -111,6 +123,7 @@ export class ProfileRepository {
     return prisma.profile.update({
       where: { id },
       data: { role },
+      select: selectWithoutPassword,
     })
   }
 

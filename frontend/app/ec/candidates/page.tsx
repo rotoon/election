@@ -28,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { PaginationBar } from '@/components/shared/pagination-bar'
 import {
   Constituency,
   useConstituencies,
@@ -36,12 +37,10 @@ import {
   useManageCandidates,
   useParties,
 } from '@/hooks/use-election'
-import { ChevronLeft, ChevronRight, Plus, Trash, User } from 'lucide-react'
+import { Plus, Trash, User } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 
 export default function ManageCandidatesPage() {
   const router = useRouter()
@@ -162,8 +161,8 @@ export default function ManageCandidatesPage() {
     setCurrentPage(1)
   }
 
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(parseInt(value))
+  const handleItemsPerPageChange = (limit: number) => {
+    setItemsPerPage(limit)
     setCurrentPage(1)
   }
 
@@ -456,129 +455,14 @@ export default function ManageCandidatesPage() {
       </div>
 
       {/* Pagination */}
-      <div className='flex items-center justify-between bg-white p-4 rounded-lg border'>
-        <div className='flex items-center space-x-2'>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={handleItemsPerPageChange}
-          >
-            <SelectTrigger className='w-[120px]'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem
-                  key={size}
-                  value={size.toString()}
-                >
-                  {size} รายการ
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className='text-sm text-muted-foreground'>
-            แสดง {meta.total > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} -{' '}
-            {Math.min(currentPage * itemsPerPage, meta.total)} จาก {meta.total}{' '}
-            รายการ
-          </div>
-        </div>
-        {meta.totalPages > 1 && (
-          <div className='flex items-center space-x-1'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className='h-4 w-4' />
-              <ChevronLeft className='h-4 w-4 -ml-2' />
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className='h-4 w-4' />
-            </Button>
-
-            {/* Page numbers */}
-            {(() => {
-              const pages: (number | string)[] = []
-              const totalPages = meta.totalPages
-
-              if (totalPages <= 7) {
-                for (let i = 1; i <= totalPages; i++) pages.push(i)
-              } else {
-                if (currentPage <= 4) {
-                  pages.push(1, 2, 3, 4, 5, '...', totalPages)
-                } else if (currentPage >= totalPages - 3) {
-                  pages.push(
-                    1,
-                    '...',
-                    totalPages - 4,
-                    totalPages - 3,
-                    totalPages - 2,
-                    totalPages - 1,
-                    totalPages,
-                  )
-                } else {
-                  pages.push(
-                    1,
-                    '...',
-                    currentPage - 1,
-                    currentPage,
-                    currentPage + 1,
-                    '...',
-                    totalPages,
-                  )
-                }
-              }
-
-              return pages.map((page, idx) =>
-                typeof page === 'number' ? (
-                  <Button
-                    key={idx}
-                    variant={currentPage === page ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => setCurrentPage(page)}
-                    className='w-9'
-                  >
-                    {page}
-                  </Button>
-                ) : (
-                  <span
-                    key={idx}
-                    className='px-2 text-muted-foreground'
-                  >
-                    ...
-                  </span>
-                ),
-              )
-            })()}
-
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() =>
-                setCurrentPage((p) => Math.min(meta.totalPages, p + 1))
-              }
-              disabled={currentPage === meta.totalPages}
-            >
-              <ChevronRight className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setCurrentPage(meta.totalPages)}
-              disabled={currentPage === meta.totalPages}
-            >
-              <ChevronRight className='h-4 w-4' />
-              <ChevronRight className='h-4 w-4 -ml-2' />
-            </Button>
-          </div>
-        )}
-      </div>
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={meta.totalPages}
+        totalItems={meta.total}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </div>
   )
 }
