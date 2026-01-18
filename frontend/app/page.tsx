@@ -14,6 +14,7 @@ import {
   Users,
   Vote,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import CountUp from "react-countup";
@@ -39,12 +40,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Skip Link for Accessibility */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm/50 backdrop-blur-md bg-white/90">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-slate-900 text-white p-2 rounded-lg">
-              <Vote className="w-5 h-5" />
+              <Vote className="w-5 h-5" aria-hidden="true" />
             </div>
             <div className="hidden sm:block">
               <h1 className="font-extrabold text-xl tracking-tight text-slate-900 leading-none">
@@ -59,7 +65,7 @@ export default function Home() {
           {/* Sticky Bite-Sized Summary (Top 3) */}
           <div className="flex-1 flex justify-center mx-4 overflow-hidden">
             {loading ? (
-              <div className="h-2 w-24 bg-slate-100 rounded animate-pulse"></div>
+              <div className="h-2 w-24 bg-slate-100 rounded animate-pulse motion-reduce:animate-none"></div>
             ) : (
               <div className="flex items-center space-x-4 overflow-x-auto no-scrollbar">
                 {topParties.map((p, i) => (
@@ -70,11 +76,13 @@ export default function Home() {
                     <span className="text-xs font-bold text-slate-400 w-4">
                       {i + 1}
                     </span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={p.logoUrl}
                       alt={p.name}
+                      width={20}
+                      height={20}
                       className="w-5 h-5 rounded-full object-cover border border-slate-100"
+                      unoptimized
                     />
                     <div className="flex flex-col leading-none">
                       <span className="text-[10px] uppercase font-bold text-slate-500">
@@ -106,11 +114,11 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Error State */}
         {error && (
           <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="w-5 h-5 mr-2" />
+            <AlertCircle className="w-5 h-5 mr-2" aria-hidden="true" />
             {error}
             <Button
               variant="link"
@@ -130,11 +138,13 @@ export default function Home() {
               <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">
                 Total Votes
               </h3>
-              <Vote className="w-5 h-5 text-blue-500" />
+              <Vote className="w-5 h-5 text-blue-500" aria-hidden="true" />
             </div>
             <p className="text-4xl font-extrabold text-slate-900 relative z-10">
               {loading ? (
-                <span className="animate-pulse">...</span>
+                <span className="animate-pulse motion-reduce:animate-none">
+                  …
+                </span>
               ) : (
                 <CountUp
                   end={data?.totalVotes || 0}
@@ -154,11 +164,13 @@ export default function Home() {
               <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">
                 Voter Turnout
               </h3>
-              <Users className="w-5 h-5 text-green-500" />
+              <Users className="w-5 h-5 text-green-500" aria-hidden="true" />
             </div>
             <p className="text-4xl font-extrabold text-slate-900 relative z-10">
               {loading ? (
-                <span className="animate-pulse">...</span>
+                <span className="animate-pulse motion-reduce:animate-none">
+                  …
+                </span>
               ) : (
                 <CountUp
                   end={data?.turnout || 0}
@@ -169,7 +181,8 @@ export default function Home() {
               )}
             </p>
             <div className="flex items-center text-xs text-green-600 font-bold mt-1 relative z-10">
-              <TrendingUp className="w-3 h-3 mr-1" /> Strong Participation
+              <TrendingUp className="w-3 h-3 mr-1" aria-hidden="true" /> Strong
+              Participation
             </div>
           </div>
 
@@ -181,13 +194,16 @@ export default function Home() {
               </h3>
               <RefreshCw
                 className={`w-5 h-5 text-purple-500 ${
-                  loading ? "animate-spin" : ""
+                  loading ? "animate-spin motion-reduce:animate-none" : ""
                 }`}
+                aria-hidden="true"
               />
             </div>
             <p className="text-4xl font-extrabold text-slate-900 relative z-10">
               {loading ? (
-                <span className="animate-pulse">...</span>
+                <span className="animate-pulse motion-reduce:animate-none">
+                  …
+                </span>
               ) : (
                 <CountUp
                   end={data?.countingProgress || 0}
@@ -228,14 +244,17 @@ export default function Home() {
                 </div>
               </div>
               {loading ? (
-                <div className="h-[300px] flex items-center justify-center text-slate-400 animate-pulse bg-slate-50 rounded-lg">
-                  Loading Chart...
+                <div className="h-[300px] flex items-center justify-center text-slate-400 animate-pulse motion-reduce:animate-none bg-slate-50 rounded-lg">
+                  Loading Chart…
                 </div>
               ) : data && data.partyStats.length > 0 ? (
                 <ParliamentChart data={data?.partyStats || []} />
               ) : (
                 <div className="h-[300px] flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-lg border-2 border-dashed border-slate-100">
-                  <BarChart3 className="w-10 h-10 mb-2 opacity-50" />
+                  <BarChart3
+                    className="w-10 h-10 mb-2 opacity-50"
+                    aria-hidden="true"
+                  />
                   <p>No seat projection available yet.</p>
                   <p className="text-sm">
                     Results will appear as counts come in.

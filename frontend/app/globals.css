@@ -91,11 +91,21 @@
   --shadow-color: hsl(220, 10%, 10%);
   --shadow-2xs: 0px 2px 10px 0px hsl(220 10% 10% / 0.03);
   --shadow-xs: 0px 2px 10px 0px hsl(220 10% 10% / 0.03);
-  --shadow-sm: 0px 2px 10px 0px hsl(220 10% 10% / 0.05), 0px 1px 2px -1px hsl(220 10% 10% / 0.05);
-  --shadow: 0px 2px 10px 0px hsl(220 10% 10% / 0.05), 0px 1px 2px -1px hsl(220 10% 10% / 0.05);
-  --shadow-md: 0px 2px 10px 0px hsl(220 10% 10% / 0.05), 0px 2px 4px -1px hsl(220 10% 10% / 0.05);
-  --shadow-lg: 0px 2px 10px 0px hsl(220 10% 10% / 0.05), 0px 4px 6px -1px hsl(220 10% 10% / 0.05);
-  --shadow-xl: 0px 2px 10px 0px hsl(220 10% 10% / 0.05), 0px 8px 10px -1px hsl(220 10% 10% / 0.05);
+  --shadow-sm:
+    0px 2px 10px 0px hsl(220 10% 10% / 0.05),
+    0px 1px 2px -1px hsl(220 10% 10% / 0.05);
+  --shadow:
+    0px 2px 10px 0px hsl(220 10% 10% / 0.05),
+    0px 1px 2px -1px hsl(220 10% 10% / 0.05);
+  --shadow-md:
+    0px 2px 10px 0px hsl(220 10% 10% / 0.05),
+    0px 2px 4px -1px hsl(220 10% 10% / 0.05);
+  --shadow-lg:
+    0px 2px 10px 0px hsl(220 10% 10% / 0.05),
+    0px 4px 6px -1px hsl(220 10% 10% / 0.05);
+  --shadow-xl:
+    0px 2px 10px 0px hsl(220 10% 10% / 0.05),
+    0px 8px 10px -1px hsl(220 10% 10% / 0.05);
   --shadow-2xl: 0px 2px 10px 0px hsl(220 10% 10% / 0.13);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
@@ -144,14 +154,24 @@
   --shadow-spread: 0px;
   --shadow-opacity: 0.2;
   --shadow-color: hsl(220, 20%, 10%);
-  --shadow-2xs: 0px 2px 10px 0px hsl(220 20% 10% / 0.10);
-  --shadow-xs: 0px 2px 10px 0px hsl(220 20% 10% / 0.10);
-  --shadow-sm: 0px 2px 10px 0px hsl(220 20% 10% / 0.20), 0px 1px 2px -1px hsl(220 20% 10% / 0.20);
-  --shadow: 0px 2px 10px 0px hsl(220 20% 10% / 0.20), 0px 1px 2px -1px hsl(220 20% 10% / 0.20);
-  --shadow-md: 0px 2px 10px 0px hsl(220 20% 10% / 0.20), 0px 2px 4px -1px hsl(220 20% 10% / 0.20);
-  --shadow-lg: 0px 2px 10px 0px hsl(220 20% 10% / 0.20), 0px 4px 6px -1px hsl(220 20% 10% / 0.20);
-  --shadow-xl: 0px 2px 10px 0px hsl(220 20% 10% / 0.20), 0px 8px 10px -1px hsl(220 20% 10% / 0.20);
-  --shadow-2xl: 0px 2px 10px 0px hsl(220 20% 10% / 0.50);
+  --shadow-2xs: 0px 2px 10px 0px hsl(220 20% 10% / 0.1);
+  --shadow-xs: 0px 2px 10px 0px hsl(220 20% 10% / 0.1);
+  --shadow-sm:
+    0px 2px 10px 0px hsl(220 20% 10% / 0.2),
+    0px 1px 2px -1px hsl(220 20% 10% / 0.2);
+  --shadow:
+    0px 2px 10px 0px hsl(220 20% 10% / 0.2),
+    0px 1px 2px -1px hsl(220 20% 10% / 0.2);
+  --shadow-md:
+    0px 2px 10px 0px hsl(220 20% 10% / 0.2),
+    0px 2px 4px -1px hsl(220 20% 10% / 0.2);
+  --shadow-lg:
+    0px 2px 10px 0px hsl(220 20% 10% / 0.2),
+    0px 4px 6px -1px hsl(220 20% 10% / 0.2);
+  --shadow-xl:
+    0px 2px 10px 0px hsl(220 20% 10% / 0.2),
+    0px 8px 10px -1px hsl(220 20% 10% / 0.2);
+  --shadow-2xl: 0px 2px 10px 0px hsl(220 20% 10% / 0.5);
 }
 
 @layer base {
@@ -160,5 +180,25 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Web Interface Guidelines: Touch & Interaction */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Web Interface Guidelines: Typography - prevent widows on headings */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Web Interface Guidelines: Skip link for accessibility */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-600 focus:font-bold;
   }
 }

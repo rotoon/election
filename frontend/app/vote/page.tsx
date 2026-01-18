@@ -8,6 +8,7 @@ import { useConstituencyStatus } from "@/hooks/use-constituencies";
 import { useMyVote, useVoteMutation } from "@/hooks/use-vote";
 import { useAuthStore } from "@/store/useAuthStore";
 import { CheckCircle2, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -38,7 +39,7 @@ export default function VotePage() {
 
   // Vote button text
   const getButtonText = () => {
-    if (voteMutation.isPending) return "กำลังบันทึก...";
+    if (voteMutation.isPending) return "กำลังบันทึก…";
     return currentVote ? "เปลี่ยนคะแนนโหวต" : "ยืนยันการลงคะแนน";
   };
 
@@ -89,7 +90,7 @@ export default function VotePage() {
     return (
       <VoterLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+          <div className="animate-spin motion-reduce:animate-none rounded-full h-12 w-12 border-b-2 border-blue-600" />
         </div>
       </VoterLayout>
     );
@@ -119,7 +120,10 @@ export default function VotePage() {
         {/* Vote confirmation info */}
         {currentVote && votedCandidate && (
           <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-center text-blue-800">
-            <CheckCircle2 className="w-5 h-5 mr-3 flex-shrink-0" />
+            <CheckCircle2
+              className="w-5 h-5 mr-3 flex-shrink-0"
+              aria-hidden="true"
+            />
             <span>
               คุณได้ลงคะแนนให้{" "}
               <strong>หมายเลข {votedCandidate.candidate_number}</strong> แล้ว
@@ -179,7 +183,7 @@ function PollStatusBadge({ isOpen }: PollStatusBadgeProps) {
   if (isOpen) {
     return (
       <span className="px-4 py-2 rounded-full bg-green-100 text-green-700 font-bold flex items-center">
-        <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+        <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse motion-reduce:animate-none" />
         หีบเปิดอยู่
       </span>
     );
@@ -227,26 +231,33 @@ function CandidateCard({
         ${isDisabled ? "opacity-60 cursor-not-allowed" : ""}
       `}
       onClick={onSelect}
+      onKeyDown={(e) => e.key === "Enter" && onSelect()}
+      role="button"
+      tabIndex={isDisabled ? -1 : 0}
+      aria-pressed={isSelected}
+      aria-disabled={isDisabled}
     >
       {/* Selected indicator */}
       {isSelected && (
         <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full z-10">
-          <CheckCircle2 className="w-5 h-5" />
+          <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
         </div>
       )}
 
       {/* Candidate image */}
       <div className="aspect-[4/3] bg-slate-100 relative">
         {candidate.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={candidate.image_url}
             alt={`${candidate.first_name} ${candidate.last_name}`}
+            width={400}
+            height={300}
             className="w-full h-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-            <User className="w-16 h-16" />
+            <User className="w-16 h-16" aria-hidden="true" />
           </div>
         )}
         <div className="absolute top-0 left-0 bg-blue-600 text-white px-4 py-2 text-xl font-bold rounded-br-xl shadow-sm">
@@ -265,11 +276,13 @@ function CandidateCard({
         {/* Party info */}
         <div className="flex items-center space-x-3 bg-white p-2 rounded border">
           {candidate.party?.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={candidate.party.logo_url}
               alt={candidate.party.name}
+              width={32}
+              height={32}
               className="w-8 h-8 object-contain"
+              unoptimized
             />
           )}
           <span className="font-medium text-slate-700">

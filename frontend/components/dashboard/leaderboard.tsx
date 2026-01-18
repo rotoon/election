@@ -78,7 +78,7 @@ export function Leaderboard({ data, totalSeats }: LeaderboardProps) {
         })}
         {data.length === 0 && (
           <div className="p-8 text-center text-slate-500">
-            No data available waiting for results...
+            No data available waiting for results…
           </div>
         )}
       </div>
