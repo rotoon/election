@@ -3,8 +3,9 @@
 import {
   DashboardConstituency,
   useElectionResults,
-} from "@/hooks/use-election";
+} from "@/hooks/use-dashboard";
 import { geoCentroid } from "d3-geo";
+
 import {
   ComposableMap,
   Geographies,

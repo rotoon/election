@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useMemo } from "react";
 
 interface PartyStat {
   id: number;
@@ -16,7 +17,11 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ data, totalSeats }: LeaderboardProps) {
-  const sortedData = [...data].sort((a, b) => b.seats - a.seats);
+  // Memoize sorted data to prevent re-sorting on every render
+  const sortedData = useMemo(
+    () => data.toSorted((a, b) => b.seats - a.seats),
+    [data]
+  );
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">

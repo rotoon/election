@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 interface PartyStat {
@@ -15,11 +16,16 @@ interface ParliamentChartProps {
 }
 
 export function ParliamentChart({ data }: ParliamentChartProps) {
-  // Sort data by seats (optional)
-  const sortedData = [...data].sort((a, b) => b.seats - a.seats);
+  // Memoize sorted data and total calculation to prevent re-computation on every render
+  const sortedData = useMemo(
+    () => data.toSorted((a, b) => b.seats - a.seats),
+    [data]
+  );
 
-  // Calculate total for center text
-  const totalSeats = sortedData.reduce((acc, curr) => acc + curr.seats, 0);
+  const totalSeats = useMemo(
+    () => sortedData.reduce((acc, curr) => acc + curr.seats, 0),
+    [sortedData]
+  );
 
   return (
     <div className="w-full h-[300px] relative">

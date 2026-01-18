@@ -1,6 +1,6 @@
 "use client";
 
-import { useDashboardStats } from "@/hooks/use-election";
+import { useDashboardStats } from "@/hooks/use-dashboard";
 
 import { Leaderboard } from "@/components/dashboard/leaderboard";
 import { ParliamentChart } from "@/components/dashboard/parliament-chart";
@@ -15,6 +15,7 @@ import {
   Vote,
 } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import CountUp from "react-countup";
 
 export default function Home() {
@@ -29,9 +30,12 @@ export default function Home() {
   // Derive error message
   const error = queryError ? "Unable to load real-time results" : "";
 
-  // Get Top 3 Parties for Sticky Header
-  const topParties =
-    data?.partyStats?.sort((a, b) => b.seats - a.seats).slice(0, 3) || [];
+  // Get Top 3 Parties for Sticky Header - memoized to avoid re-sorting on every render
+  const topParties = useMemo(
+    () =>
+      data?.partyStats?.toSorted((a, b) => b.seats - a.seats).slice(0, 3) ?? [],
+    [data?.partyStats]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
