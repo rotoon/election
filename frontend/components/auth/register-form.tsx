@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePublicConstituencies } from "@/hooks/use-election";
+import { usePublicConstituencies } from "@/hooks/use-dashboard";
 import api from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";

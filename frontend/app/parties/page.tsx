@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PartyStats, usePartyStats } from "@/hooks/use-election";
+import { usePartyStats } from "@/hooks/use-parties";
+import type { PartyStats } from "@/types";
 import { Info, Users } from "lucide-react";
 import { useState } from "react";
 

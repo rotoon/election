@@ -26,8 +26,8 @@ import {
   useDeletePartyMutation,
   useParties,
   useUpdatePartyMutation,
-  type Party,
-} from "@/hooks/use-election";
+} from "@/hooks/use-parties";
+import { type Party } from "@/types";
 import { Edit, Image as ImageIcon, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -191,8 +191,8 @@ export default function ManagePartiesPage() {
                 {createParty.isPending || updateParty.isPending
                   ? "กำลังบันทึก..."
                   : isEdit
-                  ? "บันทึกการแก้ไข"
-                  : "บันทึก"}
+                    ? "บันทึกการแก้ไข"
+                    : "บันทึก"}
               </Button>
             </DialogFooter>
           </DialogContent>

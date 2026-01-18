@@ -1,7 +1,10 @@
 import { Constituency, ManageConstituenciesResult } from "@/hooks/types";
 import api from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/error";
+import { transformConstituencies } from "@/lib/transforms";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
 export type { Constituency } from "@/hooks/types";
 
 // Hook to fetch All Constituencies (Public / Admin / EC)
@@ -10,12 +13,7 @@ export function useConstituencies() {
     queryKey: ["constituencies"],
     queryFn: async () => {
       const { data } = await api.get("/public/constituencies?limit=1000");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data.data || []).map((c: any) => ({
-        ...c,
-        zone_number: c.zoneNumber,
-        is_poll_open: c.isPollOpen,
-      })) as Constituency[];
+      return transformConstituencies(data.data || []) as Constituency[];
     },
   });
 }
@@ -45,13 +43,7 @@ export function useManageConstituencies(params: {
 
       const rawData = data.data || [];
       const meta = data.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const constituencies = rawData.map((c: any) => ({
-        ...c,
-        zone_number: c.zoneNumber,
-        is_poll_open: c.isPollOpen,
-      })) as Constituency[];
+      const constituencies = transformConstituencies(rawData) as Constituency[];
 
       return { constituencies, meta };
     },
@@ -83,13 +75,7 @@ export function useAdminConstituencies(params: {
 
       const rawData = data.data || [];
       const meta = data.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const constituencies = rawData.map((c: any) => ({
-        ...c,
-        zone_number: c.zoneNumber,
-        is_poll_open: c.isPollOpen,
-      })) as Constituency[];
+      const constituencies = transformConstituencies(rawData) as Constituency[];
 
       return { constituencies, meta };
     },
@@ -108,14 +94,6 @@ export function useConstituencyStatus(constituencyId?: string | number | null) {
       };
     },
   });
-}
-
-interface ApiError {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
 }
 
 export function useTogglePollMutation() {
@@ -179,10 +157,8 @@ export function useCreateConstituencyMutation() {
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
-    onError: (error: ApiError) => {
-      toast.error(
-        error.response?.data?.message || "เพิ่มเขตเลือกตั้งไม่สำเร็จ"
-      );
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "เพิ่มเขตเลือกตั้งไม่สำเร็จ"));
     },
   });
 }
@@ -201,8 +177,8 @@ export function useDeleteConstituencyMutation() {
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
-    onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "ลบไม่สำเร็จ");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "ลบไม่สำเร็จ"));
     },
   });
 }

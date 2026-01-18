@@ -9,10 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  useConstituencies,
-  useConstituencyResults,
-} from "@/hooks/use-election";
+import { useConstituencies } from "@/hooks/use-constituencies";
+import { useConstituencyResults } from "@/hooks/use-vote";
 import { Lock, TrendingUp, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
