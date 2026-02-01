@@ -2,18 +2,17 @@
 
 ## Current Focus
 
-- Debugging `frontend/app/vote/page.tsx` type mismatches.
-- Standardizing ID types to `number` in `use-election.ts`.
-- Refining PRD and Memory to reflect Frontend/Backend separation.
+- Implementing Apple Design System (Tokens, Animations).
+- Ensuring Premium Mobile Experience & Responsiveness.
 
 ## Just Completed
 
-- Created `PRD.md` based on user requirements.
-- Project setup verification.
-- Fixed `Candidate` interface ID type.
+- Aligned CSS Globals with Apple Design Tokens (Colors, Radius, Fonts).
+- Fixed HTML Semantics (`Link` > `Button`) for valid nesting.
+- Added Apple Motion Tokens (Standard Easing & Durations).
+- Optimized Mobile Layout (Header, Map, Grid).
 
 ## Next Steps
 
-- Verify `vote/page.tsx` build status.
-- Refine PRD based on feedback.
-- Implement missing features (if any) according to PRD.
+- Review animation implementation in components.
+- Conduct final accessibility audit (WCAG).

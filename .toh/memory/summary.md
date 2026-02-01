@@ -14,3 +14,8 @@
 - EC: Party & Candidate Management, Poll Control
 - Voter: Voting & Change Vote
 - Public: Results Dashboard
+- **Apple Design System Alignment:**
+  - Token-based Palette (Light/Dark)
+  - SF Pro Typography Stack
+  - iOS-style Motion & Border Radius
+  - Responsive Dashboard Layout
